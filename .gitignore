@@ -60,6 +60,9 @@ coverage.xml
 *.ckpt
 *.pth
 
+# Large dataset files
+data/Dementia Prediction Dataset.csv
+
 # IDE
 .vscode/
 .idea/
