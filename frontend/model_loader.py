@@ -1,58 +1,49 @@
-"""Utilities for lazily downloading and loading large model artifacts."""
-
-import gdown
+import requests
 import joblib
 import streamlit as st
 from pathlib import Path
 
 
-MODEL_FILES = {
-    'tuned_random_forest.joblib': {
-        'id': '1Z3RMLFn934osIzz5zVYJoa4VbCdDIHQD',
-        'min_bytes': 400_000_000  # ~530 MB after compression
-    },
-    'scaler.joblib': {
-        'id': '1F56EmPfF3VhaP4M7V6bhzsi14Z7KiDka',
-        'min_bytes': 100_000      # ~120 KB
-    }
+MODEL_URLS = {
+    'tuned_random_forest.joblib': 'https://drive.google.com/uc?export=download&id=1Z3RMLFn934osIzz5zVYJoa4VbCdDIHQD',
+    'scaler.joblib': 'https://drive.google.com/uc?export=download&id=1F56EmPfF3VhaP4M7V6bhzsi14Z7KiDka'
 }
 
 MODEL_DIR = Path('../models')
 
-def download_from_gdrive(file_id, destination):
-    """Download file from Google Drive using gdown"""
-    url = f'https://drive.google.com/uc?id={file_id}'
-    gdown.download(url, str(destination), quiet=False, fuzzy=True)
-
-
-def is_file_valid(path: Path, min_bytes: int) -> bool:
-    """Return True if file exists and matches the expected minimum size."""
-    return path.exists() and path.stat().st_size >= min_bytes
+def download_file(url, destination):
+    """Download file from Google Drive with progress bar"""
+    response = requests.get(url, stream=True)
+    total_size = int(response.headers.get('content-length', 0))
+    
+    progress_bar = st.progress(0)
+    downloaded = 0
+    
+    with open(destination, 'wb') as f:
+        for chunk in response.iter_content(chunk_size=8192):
+            if chunk:
+                f.write(chunk)
+                downloaded += len(chunk)
+                if total_size > 0:
+                    progress_bar.progress(downloaded / total_size)
+    
+    progress_bar.empty()
 
 def ensure_models_exist():
     """Download models if they don't exist"""
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     
-    for filename, meta in MODEL_FILES.items():
+    for filename, url in MODEL_URLS.items():
         filepath = MODEL_DIR / filename
-        if is_file_valid(filepath, meta['min_bytes']):
-            continue
-
-        if filepath.exists():
-            filepath.unlink(missing_ok=True)
-
-        st.info(f"📥 Downloading {filename}... This may take a few minutes on first run.")
-        try:
-            download_from_gdrive(meta['id'], filepath)
-            if is_file_valid(filepath, meta['min_bytes']):
-                size_mb = filepath.stat().st_size / (1024 * 1024)
-                st.success(f"✅ {filename} downloaded successfully ({size_mb:.1f} MB)")
-            else:
-                st.error(f"❌ {filename} looks incomplete. Please retry later.")
+        
+        if not filepath.exists():
+            st.info(f"📥 Downloading {filename}... This may take a few minutes on first run.")
+            try:
+                download_file(url, filepath)
+                st.success(f"✅ {filename} downloaded successfully!")
+            except Exception as e:
+                st.error(f"❌ Failed to download {filename}: {str(e)}")
                 return False
-        except Exception as e:
-            st.error(f"❌ Failed to download {filename}: {str(e)}")
-            return False
     
     return True
 
