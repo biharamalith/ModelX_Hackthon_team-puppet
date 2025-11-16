@@ -15,7 +15,12 @@ MODEL_DIR = Path('../models')
 def download_from_gdrive(file_id, destination):
     """Download file from Google Drive using gdown"""
     url = f'https://drive.google.com/uc?id={file_id}'
-    gdown.download(url, str(destination), quiet=False)
+    try:
+        gdown.download(url, str(destination), quiet=False, fuzzy=True)
+    except Exception as e:
+        # Try alternative download method for large files
+        gdown.download(f'https://drive.google.com/uc?export=download&id={file_id}', 
+                      str(destination), quiet=False)
 
 def ensure_models_exist():
     """Download models if they don't exist"""
