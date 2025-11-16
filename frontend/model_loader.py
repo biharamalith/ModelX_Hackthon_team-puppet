@@ -1,59 +1,33 @@
 import os
-import requests
+import gdown
 import joblib
 import streamlit as st
 from pathlib import Path
 
 
-MODEL_URLS = {
-    'tuned_random_forest.joblib': 'https://drive.google.com/uc?export=download&id=1Z3RMLFn934osIzz5zVYJoa4VbCdDIHQD',
-    'scaler.joblib': 'https://drive.google.com/uc?export=download&id=1F56EmPfF3VhaP4M7V6bhzsi14Z7KiDka'
+MODEL_FILES = {
+    'tuned_random_forest.joblib': '1Z3RMLFn934osIzz5zVYJoa4VbCdDIHQD',
+    'scaler.joblib': '1F56EmPfF3VhaP4M7V6bhzsi14Z7KiDka'
 }
 
 MODEL_DIR = Path('../models')
 
-def download_file(url, destination):
-    """Download file from Google Drive with progress bar"""
-    session = requests.Session()
-    
-    # First request to get the file
-    response = session.get(url, stream=True)
-    
-    # Check if we need to confirm download (large files)
-    for key, value in response.cookies.items():
-        if key.startswith('download_warning'):
-            # Get the confirmation token
-            params = {'confirm': value}
-            url = url + '&confirm=' + value
-            response = session.get(url, params=params, stream=True)
-            break
-    
-    total_size = int(response.headers.get('content-length', 0))
-    
-    progress_bar = st.progress(0)
-    downloaded = 0
-    
-    with open(destination, 'wb') as f:
-        for chunk in response.iter_content(chunk_size=8192):
-            if chunk:
-                f.write(chunk)
-                downloaded += len(chunk)
-                if total_size > 0:
-                    progress_bar.progress(downloaded / total_size)
-    
-    progress_bar.empty()
+def download_from_gdrive(file_id, destination):
+    """Download file from Google Drive using gdown"""
+    url = f'https://drive.google.com/uc?id={file_id}'
+    gdown.download(url, str(destination), quiet=False)
 
 def ensure_models_exist():
     """Download models if they don't exist"""
     MODEL_DIR.mkdir(parents=True, exist_ok=True)
     
-    for filename, url in MODEL_URLS.items():
+    for filename, file_id in MODEL_FILES.items():
         filepath = MODEL_DIR / filename
         
         if not filepath.exists():
             st.info(f"📥 Downloading {filename}... This may take a few minutes on first run.")
             try:
-                download_file(url, filepath)
+                download_from_gdrive(file_id, filepath)
                 st.success(f"✅ {filename} downloaded successfully!")
             except Exception as e:
                 st.error(f"❌ Failed to download {filename}: {str(e)}")
