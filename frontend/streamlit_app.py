@@ -171,66 +171,173 @@ elif page == "🔮 Risk Predictor":
     if model is None:
         st.error("⚠️ Model not loaded. Please train the model first.")
     else:
-        st.markdown("### Enter Your Information")
-        st.info("💡 Please answer the following questions honestly. This is for educational purposes only and not a medical diagnosis.")
+        # Introduction section
+        st.markdown("""
+        <div style='background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 2rem; border-radius: 15px; margin-bottom: 2rem;'>
+            <h2 style='color: white; text-align: center; margin: 0;'>📋 Health & Lifestyle Assessment</h2>
+            <p style='color: white; text-align: center; margin-top: 1rem; font-size: 1.1rem;'>
+                Answer a few simple questions about yourself to get a personalized dementia risk assessment
+            </p>
+        </div>
+        """, unsafe_allow_html=True)
         
-        # Create input form
+        st.info("💡 **Instructions:** Fill out all fields below. This assessment takes about 3-5 minutes. All information is confidential and not stored.")
+        
+        # Create input form with better organization
         with st.form("prediction_form"):
+            # Section 1: Basic Information
+            st.markdown("### 👤 Basic Information")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                naccage = st.number_input("🎂 Current Age", min_value=50, max_value=110, value=70, help="Your current age in years")
+                naccageb = st.number_input("📅 Age at First Medical Visit", min_value=50, max_value=110, value=65, help="How old were you during your first visit?")
+                sex = st.selectbox("⚧ Sex", [1, 2], format_func=lambda x: "Male" if x == 1 else "Female")
+                educ = st.slider("🎓 Years of Education", min_value=0, max_value=25, value=12, help="Total years of formal education")
+                handed = st.selectbox("✍️ Handedness", [1, 2, 3], 
+                                     format_func=lambda x: ["Right-handed", "Left-handed", "Ambidextrous"][x-1])
+            
+            with col2:
+                maristat = st.selectbox("💑 Marital Status", [1, 2, 3, 4, 5], 
+                                       format_func=lambda x: ["Married", "Widowed", "Divorced", "Separated", "Never Married"][x-1])
+                nacclivs = st.selectbox("🏠 Living Situation", [1, 2, 3, 4], 
+                                       format_func=lambda x: ["Living Alone", "Living with Spouse/Partner", "Living with Children", "Other Living Arrangement"][x-1])
+                race = st.selectbox("🌍 Race", [1, 2, 3, 4, 5], 
+                                   format_func=lambda x: ["White", "Black/African American", "Asian", "Native American", "Other"][x-1])
+                hispanic = st.selectbox("🌎 Hispanic/Latino Ethnicity", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
+            
+            st.markdown("---")
+            
+            # Section 2: Lifestyle Factors
+            st.markdown("### 🚬 Lifestyle & Habits")
+            col1, col2 = st.columns(2)
+            
+            with col1:
+                tobacco = st.selectbox("🚬 Have you smoked 100+ cigarettes in your lifetime?", [0, 1], 
+                                      format_func=lambda x: "No" if x == 0 else "Yes", 
+                                      help="About 5 packs of cigarettes")
+                smokyrs = st.number_input("📊 If yes, how many years did you smoke?", min_value=0, max_value=80, value=0)
+            
+            with col2:
+                alcohol = st.selectbox("🍷 History of alcohol abuse?", [0, 1], 
+                                      format_func=lambda x: "No" if x == 0 else "Yes",
+                                      help="Chronic excessive drinking that affects daily life")
+            
+            st.markdown("---")
+            
+            # Section 3: Medical History
+            st.markdown("### 🏥 Medical History")
+            st.caption("Please indicate if you have been diagnosed with any of the following conditions:")
+            
             col1, col2, col3 = st.columns(3)
             
             with col1:
-                st.markdown("#### 👤 Demographics")
-                naccage = st.number_input("Current Age", min_value=50, max_value=110, value=70)
-                naccageb = st.number_input("Age at First Visit", min_value=50, max_value=110, value=65)
-                sex = st.selectbox("Sex", [1, 2], format_func=lambda x: "Male" if x == 1 else "Female")
-                educ = st.slider("Years of Education", min_value=0, max_value=25, value=12)
-                maristat = st.selectbox("Marital Status", [1, 2, 3, 4, 5], 
-                                       format_func=lambda x: ["Married", "Widowed", "Divorced", "Separated", "Never Married"][x-1])
-                nacclivs = st.selectbox("Living Situation", [1, 2, 3, 4], 
-                                       format_func=lambda x: ["Alone", "With Spouse", "With Children", "Other"][x-1])
-                race = st.selectbox("Race", [1, 2, 3, 4, 5], 
-                                   format_func=lambda x: ["White", "Black", "Asian", "Native American", "Other"][x-1])
-                hispanic = st.selectbox("Hispanic/Latino", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                handed = st.selectbox("Handedness", [1, 2, 3], 
-                                     format_func=lambda x: ["Right", "Left", "Ambidextrous"][x-1])
+                st.markdown("**Heart & Circulation:**")
+                cvhatt = st.checkbox("❤️ Heart Attack", help="Myocardial infarction")
+                cvafib = st.checkbox("💓 Atrial Fibrillation", help="Irregular heartbeat")
+                cvchf = st.checkbox("🫀 Heart Failure")
+                cbstroke = st.checkbox("🧠 Stroke")
+                cbtia = st.checkbox("⚡ TIA (Mini-stroke)", help="Transient Ischemic Attack")
             
             with col2:
-                st.markdown("#### 🏥 Health History")
-                tobacco = st.selectbox("Smoked 100+ cigarettes?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                smokyrs = st.number_input("Years Smoked", min_value=0, max_value=80, value=0)
-                alcohol = st.selectbox("Alcohol Abuse History?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                cvhatt = st.selectbox("Heart Attack?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                cvafib = st.selectbox("Atrial Fibrillation?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                cvchf = st.selectbox("Heart Failure?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                cbstroke = st.selectbox("Stroke?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                cbtia = st.selectbox("TIA (Mini-stroke)?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                diabetes = st.selectbox("Diabetes?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                hyperten = st.selectbox("Hypertension?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                hypercho = st.selectbox("High Cholesterol?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                nacctbi = st.selectbox("Traumatic Brain Injury?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                apnea = st.selectbox("Sleep Apnea?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                dep2yrs = st.selectbox("Depression (last 2 years)?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
+                st.markdown("**Metabolic Conditions:**")
+                diabetes = st.checkbox("💉 Diabetes")
+                hyperten = st.checkbox("🩺 Hypertension", help="High blood pressure")
+                hypercho = st.checkbox("🧪 High Cholesterol")
             
             with col3:
-                st.markdown("#### 👨‍👩‍👧 Family & Physical")
-                naccfam = st.selectbox("Family Member with Cognitive Issues?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                naccmom = st.selectbox("Mother with Cognitive Issues?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                naccdad = st.selectbox("Father with Cognitive Issues?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
-                
-                st.markdown("#### 📏 Physical Measures")
-                height = st.number_input("Height (inches)", min_value=48, max_value=84, value=65)
-                weight = st.number_input("Weight (lbs)", min_value=80, max_value=400, value=150)
-                bmi = (weight / (height ** 2)) * 703
-                st.metric("Calculated BMI", f"{bmi:.1f}")
-                
-                bpsys = st.number_input("Systolic BP", min_value=80, max_value=200, value=120)
-                bpdias = st.number_input("Diastolic BP", min_value=50, max_value=130, value=80)
-                
-                hearing = st.selectbox("Hearing (without aid)", [0, 1, 2], 
-                                      format_func=lambda x: ["Normal", "Mild Loss", "Moderate/Severe Loss"][x])
-                hearaid = st.selectbox("Wears Hearing Aid?", [0, 1], format_func=lambda x: "No" if x == 0 else "Yes")
+                st.markdown("**Other Conditions:**")
+                nacctbi = st.checkbox("🤕 Traumatic Brain Injury", help="Previous head injury")
+                apnea = st.checkbox("😴 Sleep Apnea")
+                dep2yrs = st.checkbox("😔 Depression (last 2 years)", help="Active depression in past 2 years")
             
-            submit_button = st.form_submit_button("🔍 Predict Risk", use_container_width=True)
+            # Convert checkboxes to 0/1
+            cvhatt = 1 if cvhatt else 0
+            cvafib = 1 if cvafib else 0
+            cvchf = 1 if cvchf else 0
+            cbstroke = 1 if cbstroke else 0
+            cbtia = 1 if cbtia else 0
+            diabetes = 1 if diabetes else 0
+            hyperten = 1 if hyperten else 0
+            hypercho = 1 if hypercho else 0
+            nacctbi = 1 if nacctbi else 0
+            apnea = 1 if apnea else 0
+            dep2yrs = 1 if dep2yrs else 0
+            
+            st.markdown("---")
+            
+            # Section 4: Family History
+            st.markdown("### 👨‍👩‍👧‍👦 Family History")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                naccfam = st.selectbox("👥 Any family member with cognitive/memory issues?", [0, 1], 
+                                      format_func=lambda x: "No" if x == 0 else "Yes")
+            with col2:
+                naccmom = st.selectbox("👩 Mother with cognitive/memory issues?", [0, 1], 
+                                      format_func=lambda x: "No" if x == 0 else "Yes")
+            with col3:
+                naccdad = st.selectbox("👨 Father with cognitive/memory issues?", [0, 1], 
+                                      format_func=lambda x: "No" if x == 0 else "Yes")
+            
+            st.markdown("---")
+            
+            # Section 5: Physical Measurements
+            st.markdown("### 📏 Physical Measurements")
+            col1, col2, col3 = st.columns(3)
+            
+            with col1:
+                height = st.number_input("📐 Height (inches)", min_value=48, max_value=84, value=65, help="Your height in inches")
+                weight = st.number_input("⚖️ Weight (pounds)", min_value=80, max_value=400, value=150, help="Your weight in pounds")
+                bmi = (weight / (height ** 2)) * 703
+                
+                # BMI indicator with color coding
+                if bmi < 18.5:
+                    bmi_status = "🔵 Underweight"
+                    bmi_color = "blue"
+                elif 18.5 <= bmi < 25:
+                    bmi_status = "🟢 Normal"
+                    bmi_color = "green"
+                elif 25 <= bmi < 30:
+                    bmi_status = "🟡 Overweight"
+                    bmi_color = "orange"
+                else:
+                    bmi_status = "🔴 Obese"
+                    bmi_color = "red"
+                
+                st.metric("Calculated BMI", f"{bmi:.1f}", bmi_status)
+            
+            with col2:
+                bpsys = st.number_input("🩺 Systolic Blood Pressure", min_value=80, max_value=200, value=120, 
+                                       help="Top number (e.g., 120 in 120/80)")
+                bpdias = st.number_input("💉 Diastolic Blood Pressure", min_value=50, max_value=130, value=80,
+                                        help="Bottom number (e.g., 80 in 120/80)")
+                
+                # BP indicator
+                if bpsys < 120 and bpdias < 80:
+                    bp_status = "🟢 Normal"
+                elif bpsys < 130 and bpdias < 80:
+                    bp_status = "🟡 Elevated"
+                elif bpsys < 140 or bpdias < 90:
+                    bp_status = "🟠 Stage 1 Hypertension"
+                else:
+                    bp_status = "🔴 Stage 2 Hypertension"
+                
+                st.info(f"Blood Pressure Status: {bp_status}")
+            
+            with col3:
+                hearing = st.selectbox("👂 Hearing (without aid)", [0, 1, 2], 
+                                      format_func=lambda x: ["Normal Hearing", "Mild Hearing Loss", "Moderate/Severe Loss"][x],
+                                      help="How well can you hear without a hearing aid?")
+                hearaid = st.selectbox("🦻 Do you wear a hearing aid?", [0, 1], 
+                                      format_func=lambda x: "No" if x == 0 else "Yes")
+            
+            st.markdown("---")
+            
+            # Submit button with better styling
+            col1, col2, col3 = st.columns([1, 2, 1])
+            with col2:
+                submit_button = st.form_submit_button("🔍 Calculate My Risk Assessment", use_container_width=True)
         
         if submit_button:
             # Prepare input data (must match training feature order)
